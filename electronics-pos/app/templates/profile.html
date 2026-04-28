@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - RBC's Stock Monitoring System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="dashboard-page">
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-brand">
+            <h2>RBC'S</h2>
+            <p>Stocks Monitoring System</p>
+        </div>
+        
+        <nav class="sidebar-menu">
+            <a href="{{ url_for('routes.dashboard') }}" class="menu-item">
+                <i class="fas fa-chart-line"></i>
+                <span>DashBoard</span>
+            </a>
+            <a href="{{ url_for('routes.products') }}" class="menu-item">
+                <i class="fas fa-box"></i>
+                <span>Inventory</span>
+            </a>
+            <a href="{{ url_for('routes.reports') }}" class="menu-item">
+                <i class="fas fa-file-alt"></i>
+                <span>Reports</span>
+            </a>
+            {% if current_user.role == 'admin' %}
+            <a href="{{ url_for('routes.users') }}" class="menu-item">
+                <i class="fas fa-users"></i>
+                <span>Users</span>
+            </a>
+            {% endif %}
+        </nav>
+        
+        <div class="sidebar-footer">
+            <a href="{{ url_for('auth.logout') }}" class="menu-item logout">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Log Out</span>
+            </a>
+        </div>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <div class="greeting">
+                <h2>Profile</h2>
+            </div>
+            <div class="profile-section">
+                <div class="profile-avatar">
+                    <i class="fas fa-user-circle"></i>
+                </div>
+                <a href="{{ url_for('routes.profile') }}" class="profile-link active">Profile</a>
+            </div>
+        </div>
+        
+        <!-- Profile Content -->
+        <div class="profile-container">
+            <div class="profile-card">
+                <div class="profile-header">
+                    <div class="profile-picture">
+                        <i class="fas fa-user-circle"></i>
+                    </div>
+                    <div class="profile-basic">
+                        <h2>{{ user.username }}</h2>
+                        <p class="role-badge">
+                            <i class="fas fa-briefcase"></i>
+                            {{ user.role|upper }}
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="profile-details">
+                    <h3>Account Information</h3>
+                    
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <label>Username</label>
+                            <p>{{ user.username }}</p>
+                        </div>
+                        
+                        <div class="detail-item">
+                            <label>Email</label>
+                            <p>{{ user.email }}</p>
+                        </div>
+                        
+                        <div class="detail-item">
+                            <label>Role</label>
+                            <p>
+                                <span class="status-badge {% if user.role == 'admin' %}admin{% else %}employee{% endif %}">
+                                    {{ user.role|upper }}
+                                </span>
+                            </p>
+                        </div>
+                        
+                        <div class="detail-item">
+                            <label>Member Since</label>
+                            <p>{{ user.created_at.strftime('%B %d, %Y') }}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="profile-stats">
+                    <h3>Activity</h3>
+                    
+                    <div class="stat-grid">
+                        {% if user.role == 'employee' %}
+                            <div class="stat-item">
+                                <div class="stat-icon">
+                                    <i class="fas fa-shopping-cart"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <p class="stat-label">Sales Made</p>
+                                    <p class="stat-value">{{ user.sales|length }}</p>
+                                </div>
+                            </div>
+                        {% endif %}
+                        
+                        <div class="stat-item">
+                            <div class="stat-icon">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="stat-info">
+                                <p class="stat-label">Account Status</p>
+                                <p class="stat-value">
+                                    <span class="status-badge active">Active</span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="profile-actions">
+                    <button class="btn btn-primary">
+                        <i class="fas fa-edit"></i> Edit Profile
+                    </button>
+                    <button class="btn btn-secondary">
+                        <i class="fas fa-key"></i> Change Password
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

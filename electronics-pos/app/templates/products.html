@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory Management - NENE CELLSHOP RBC'S Stock Monitoring System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="dashboard-page">
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-brand">
+            <h2>RBC'S</h2>
+            <p>Stocks Monitoring System</p>
+        </div>
+        
+        <nav class="sidebar-menu">
+            <a href="{{ url_for('routes.dashboard') }}" class="menu-item">
+                <i class="fas fa-chart-line"></i>
+                <span>DashBoard</span>
+            </a>
+            <a href="{{ url_for('routes.products') }}" class="menu-item active">
+                <i class="fas fa-box"></i>
+                <span>Inventory</span>
+            </a>
+            <a href="{{ url_for('routes.reports') }}" class="menu-item">
+                <i class="fas fa-file-alt"></i>
+                <span>Reports</span>
+            </a>
+            <a href="{{ url_for('routes.users') }}" class="menu-item">
+                <i class="fas fa-users"></i>
+                <span>Users</span>
+            </a>
+        </nav>
+        
+        <div class="sidebar-footer">
+            <a href="{{ url_for('auth.logout') }}" class="menu-item logout">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Log Out</span>
+            </a>
+        </div>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <div class="greeting">
+                <h2>Inventory Management</h2>
+            </div>
+            <div class="profile-section">
+                <div class="profile-avatar">
+                    <i class="fas fa-user-circle"></i>
+                </div>
+                <a href="{{ url_for('routes.profile') }}" class="profile-link">Profile</a>
+            </div>
+        </div>
+        
+        <!-- Status Filter Cards -->
+        <div class="status-filter-container">
+            <div class="status-card filter-card in-stock-filter" onclick="filterByStatus('in_stock')">
+                <div class="status-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="status-info">
+                    <h4>In Stock</h4>
+                    <p id="in-stock-count">0</p>
+                </div>
+            </div>
+            
+            <div class="status-card filter-card low-stock-filter" onclick="filterByStatus('low_stock')">
+                <div class="status-icon">
+                    <i class="fas fa-arrow-down"></i>
+                </div>
+                <div class="status-info">
+                    <h4>Low Stock</h4>
+                    <p id="low-stock-count">0</p>
+                </div>
+            </div>
+            
+            <div class="status-card filter-card out-of-stock-filter" onclick="filterByStatus('out_of_stock')">
+                <div class="status-icon">
+                    <i class="fas fa-times-circle"></i>
+                </div>
+                <div class="status-info">
+                    <h4>Out of Stock</h4>
+                    <p id="out-of-stock-count">0</p>
+                </div>
+            </div>
+            
+            <div class="status-card filter-card critical-stock-filter" onclick="filterByStatus('critical_stock')">
+                <div class="status-icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="status-info">
+                    <h4>Critical Stock</h4>
+                    <p id="critical-stock-count">0</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Search and Actions -->
+        <div class="inventory-controls">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchInput" placeholder="Search products..." onkeyup="searchProducts()">
+            </div>
+            <button class="btn-add-product" onclick="showAddProductForm()">
+                <i class="fas fa-plus"></i> Add New Product
+            </button>
+        </div>
+        
+        <!-- Products Table -->
+        <div class="inventory-table-section">
+            <table class="inventory-table">
+                <thead>
+                    <tr>
+                        <th>Product Name</th>
+                        <th>Category</th>
+                        <th>SKU</th>
+                        <th>Price</th>
+                        <th>Stock</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="productsTableBody">
+                    {% for product in products %}
+                        <tr class="product-row" data-status="{{ product.get_stock_status() }}" data-name="{{ product.name }}" data-category="{{ product.category }}">
+                            <td>{{ product.name }}</td>
+                            <td><span class="category-badge">{{ product.category }}</span></td>
+                            <td>{{ product.sku }}</td>
+                            <td>₱{{ "%.2f"|format(product.price) }}</td>
+                            <td>{{ product.quantity_in_stock }}</td>
+                            <td>
+                                <span class="status-badge status-{{ product.get_stock_status() }}">
+                                    {{ product.get_status_display() }}
+                                </span>
+                            </td>
+                            <td>
+                                <button class="btn-action edit" onclick="editProduct({{ product.id }})" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn-action delete" onclick="deleteProduct({{ product.id }})" title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="7" style="text-align: center; padding: 20px;">No products found</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Add Product Form Modal -->
+        <div id="addProductModal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Add New Product</h3>
+                    <button class="close-modal" onclick="hideAddProductForm()">×</button>
+                </div>
+                <form onsubmit="addProduct(event)" class="product-form">
+                    <div class="form-group-new">
+                        <label>Product Name</label>
+                        <input type="text" id="productName" placeholder="Enter product name" required>
+                    </div>
+                    <div class="form-group-new">
+                        <label>Category</label>
+                        <select id="productCategory" required>
+                            <option value="">Select Category</option>
+                            <option value="phone-case">Phone Case</option>
+                            <option value="charger">Charger</option>
+                            <option value="cable">Cable</option>
+                            <option value="screen-protector">Screen Protector</option>
+                            <option value="power-bank">Power Bank</option>
+                            <option value="other">Other Electronics</option>
+                        </select>
+                    </div>
+                    <div class="form-group-new">
+                        <label>SKU</label>
+                        <input type="text" id="productSku" placeholder="Enter SKU" required>
+                    </div>
+                    <div class="form-group-new">
+                        <label>Price</label>
+                        <input type="number" id="productPrice" step="0.01" placeholder="Enter price" required>
+                    </div>
+                    <div class="form-group-new">
+                        <label>Quantity in Stock</label>
+                        <input type="number" id="productQuantity" placeholder="Enter quantity" required>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn-form-submit">Add Product</button>
+                        <button type="button" class="btn-form-cancel" onclick="hideAddProductForm()">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let allProducts = [];
+        let currentFilter = null;
+        
+        // Load products data
+        function loadProducts() {
+            fetch('/api/products')
+                .then(r => r.json())
+                .then(products => {
+                    allProducts = products;
+                    updateStatusCounts();
+                });
+        }
+        
+        // Update status counts
+        function updateStatusCounts() {
+            const statuses = {
+                in_stock: 0,
+                low_stock: 0,
+                out_of_stock: 0,
+                critical_stock: 0
+            };
+            
+            allProducts.forEach(product => {
+                let status;
+                if (product.quantity === 0) {
+                    status = 'out_of_stock';
+                } else if (product.quantity <= 5) {
+                    status = 'critical_stock';
+                } else if (product.quantity <= 20) {
+                    status = 'low_stock';
+                } else {
+                    status = 'in_stock';
+                }
+                statuses[status]++;
+            });
+            
+            document.getElementById('in-stock-count').textContent = statuses.in_stock;
+            document.getElementById('low-stock-count').textContent = statuses.low_stock;
+            document.getElementById('out-of-stock-count').textContent = statuses.out_of_stock;
+            document.getElementById('critical-stock-count').textContent = statuses.critical_stock;
+        }
+        
+        // Filter by status
+        function filterByStatus(status) {
+            currentFilter = currentFilter === status ? null : status;
+            
+            document.querySelectorAll('.product-row').forEach(row => {
+                if (!currentFilter || row.getAttribute('data-status') === currentFilter) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+            
+            // Update filter card styling
+            document.querySelectorAll('.filter-card').forEach(card => {
+                card.classList.remove('active');
+            });
+            if (currentFilter) {
+                const filterClass = currentFilter.replace('_', '-') + '-filter';
+                const filterCard = document.querySelector('.' + filterClass);
+                if (filterCard) {
+                    filterCard.classList.add('active');
+                }
+            }
+        }
+        
+        // Search products
+        function searchProducts() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            
+            document.querySelectorAll('.product-row').forEach(row => {
+                const name = row.getAttribute('data-name').toLowerCase();
+                const category = row.getAttribute('data-category').toLowerCase();
+                const status = row.getAttribute('data-status');
+                
+                const matchesSearch = name.includes(searchTerm) || category.includes(searchTerm);
+                const matchesFilter = !currentFilter || status === currentFilter;
+                
+                if (matchesSearch && matchesFilter) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+        
+        // Modal functions
+        function showAddProductForm() {
+            document.getElementById('addProductModal').classList.remove('hidden');
+        }
+        
+        function hideAddProductForm() {
+            document.getElementById('addProductModal').classList.add('hidden');
+            document.getElementById('productName').value = '';
+            document.getElementById('productCategory').value = '';
+            document.getElementById('productSku').value = '';
+            document.getElementById('productPrice').value = '';
+            document.getElementById('productQuantity').value = '';
+        }
+        
+        function addProduct(event) {
+            event.preventDefault();
+            
+            const data = {
+                name: document.getElementById('productName').value,
+                category: document.getElementById('productCategory').value,
+                sku: document.getElementById('productSku').value,
+                price: document.getElementById('productPrice').value,
+                quantity: document.getElementById('productQuantity').value
+            };
+            
+            fetch('/api/products', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Product added successfully!');
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            });
+        }
+        
+        function deleteProduct(productId) {
+            if (confirm('Are you sure you want to delete this product?')) {
+                fetch('/api/products/' + productId, {method: 'DELETE'})
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Product deleted!');
+                        location.reload();
+                    }
+                });
+            }
+        }
+        
+        function editProduct(productId) {
+            alert('Edit functionality coming soon!');
+        }
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', loadProducts);
+    </script>
+</body>
+</html>
