@@ -66,7 +66,7 @@
             <div class="stat-card in-stock">
                 <div class="stat-content">
                     <h3>In Stock</h3>
-                    <p class="stat-number">3</p>
+                    <p class="stat-number">{{ in_stock }}</p>
                 </div>
                 <div class="stat-icon">
                     <i class="fas fa-check-circle"></i>
@@ -76,7 +76,7 @@
             <div class="stat-card low-stock">
                 <div class="stat-content">
                     <h3>Low Stock</h3>
-                    <p class="stat-number">1</p>
+                    <p class="stat-number">{{ low_stock }}</p>
                 </div>
                 <div class="stat-icon">
                     <i class="fas fa-exclamation-circle"></i>
@@ -86,7 +86,7 @@
             <div class="stat-card out-of-stock">
                 <div class="stat-content">
                     <h3>Out of Stock</h3>
-                    <p class="stat-number">0</p>
+                  <p class="stat-number">{{ out_of_stock }}</p>
                 </div>
                 <div class="stat-icon">
                     <i class="fas fa-times-circle"></i>
@@ -96,7 +96,7 @@
             <div class="stat-card critical-stock">
                 <div class="stat-content">
                     <h3>Critical Low Stock</h3>
-                    <p class="stat-number">3</p>
+                    <p class="stat-number">{{ critical_stock }}</p>
                 </div>
                 <div class="stat-icon">
                     <i class="fas fa-exclamation-triangle"></i>

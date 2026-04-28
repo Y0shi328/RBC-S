@@ -244,11 +244,34 @@ def reports():
             func.date(Sale.created_at).label('date'),
             func.sum(Sale.total_amount).label('total')
         ).filter(Sale.created_at >= thirty_days_ago).group_by(func.date(Sale.created_at)).all()
+        #  INVENTORY STATS (FIXED LOCATION)
+        products = Product.query.all()
+
+        in_stock = 0
+        low_stock = 0
+        critical_stock = 0
+        out_of_stock = 0
+
+        for p in products:
+            status = p.get_stock_status()
+
+            if status == 'out_of_stock':
+                out_of_stock += 1
+            elif status == 'critical_stock':
+                critical_stock += 1
+            elif status == 'low_stock':
+                low_stock += 1
+            else:
+                in_stock += 1
         
         return render_template('reports.html',
                              best_sellers=best_sellers,
                              daily_sales=daily_total,
                              monthly_sales=monthly_sales,
+                             in_stock=in_stock,
+                             low_stock=low_stock,
+                             critical_stock=critical_stock,
+                             out_of_stock=out_of_stock,
                              user_role='admin')
     else:
         # Employee sees their own reports
@@ -279,10 +302,34 @@ def reports():
             Sale.created_at >= thirty_days_ago
         ).group_by(func.date(Sale.created_at)).all()
         
+        # INVENTORY STATS (SAME AS ADMIN)
+        products = Product.query.all()
+        
+        in_stock = 0
+        low_stock = 0
+        critical_stock = 0
+        out_of_stock = 0
+        
+        for p in products:
+            status = p.get_stock_status()
+            
+            if status == 'out_of_stock':
+                out_of_stock += 1
+            elif status == 'critical_stock':
+                critical_stock += 1
+            elif status == 'low_stock':
+                low_stock += 1
+            else:
+                in_stock += 1
+        
         return render_template('reports.html',
                              best_sellers=best_sellers,
                              daily_sales=daily_total,
                              monthly_sales=monthly_sales,
+                             in_stock=in_stock,
+                             low_stock=low_stock,
+                             critical_stock=critical_stock,
+                             out_of_stock=out_of_stock,
                              user_role='employee')
 
 # Get all products for API
