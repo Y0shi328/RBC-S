@@ -4,6 +4,7 @@ from app import db
 from app.models import Product, Sale, SaleItem, User
 from datetime import datetime, timedelta
 from sqlalchemy import func
+from sqlalchemy.exc import IntegrityError
 
 bp = Blueprint('routes', __name__)
 
@@ -350,6 +351,45 @@ def get_products():
 @login_required
 def profile():
     return render_template('profile.html', user=current_user)
+
+@bp.route('/profile/update', methods=['POST'])
+@login_required
+def update_profile():
+    username = request.form.get('username', '').strip()
+    email = request.form.get('email', '').strip()
+
+    if not username or not email:
+        return jsonify({'error': 'Username and email are required.'}), 400
+
+    current_user.username = username
+    current_user.email = email
+
+    try:
+        db.session.commit()
+        return jsonify({'success': True})
+    except IntegrityError:
+        db.session.rollback()
+        return jsonify({'error': 'That username or email is already in use.'}), 400
+
+@bp.route('/profile/change-password', methods=['POST'])
+@login_required
+def change_password():
+    current_password = request.form.get('currentPassword', '')
+    new_password = request.form.get('newPassword', '')
+    confirm_password = request.form.get('confirmPassword', '')
+
+    if not current_password or not new_password or not confirm_password:
+        return jsonify({'error': 'Please fill in all password fields.'}), 400
+
+    if new_password != confirm_password:
+        return jsonify({'error': 'New password and confirmation do not match.'}), 400
+
+    if not current_user.check_password(current_password):
+        return jsonify({'error': 'Current password is incorrect.'}), 400
+
+    current_user.set_password(new_password)
+    db.session.commit()
+    return jsonify({'success': True})
 
 # Users Page (Admin only)
 @bp.route('/users')

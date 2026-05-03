@@ -46,6 +46,9 @@
     <div class="main-content">
         <!-- Top Bar -->
         <div class="top-bar">
+            <button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Toggle sidebar">
+                <i class="fas fa-bars"></i>
+            </button>
             <div class="greeting">
                 <h2>Inventory Management</h2>
             </div>
@@ -127,7 +130,7 @@
                 </thead>
                 <tbody id="productsTableBody">
                     {% for product in products %}
-                        <tr class="product-row" data-status="{{ product.get_stock_status() }}" data-name="{{ product.name }}" data-category="{{ product.category }}">
+                        <tr class="product-row" data-status="{{ product.get_stock_status() }}" data-name="{{ product.name }}" data-category="{{ product.category }}" data-sku="{{ product.sku }}" data-price="{{ product.price }}" data-quantity="{{ product.quantity_in_stock }}">
                             <td>{{ product.name }}</td>
                             <td><span class="category-badge">{{ product.category }}</span></td>
                             <td>{{ product.sku }}</td>
@@ -195,6 +198,50 @@
                     <div class="form-actions">
                         <button type="submit" class="btn-form-submit">Add Product</button>
                         <button type="button" class="btn-form-cancel" onclick="hideAddProductForm()">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div id="editProductModal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Edit Product</h3>
+                    <button class="close-modal" onclick="hideEditProductForm()">×</button>
+                </div>
+                <form onsubmit="updateProduct(event)" class="product-form">
+                    <input type="hidden" id="editProductId">
+                    <div class="form-group-new">
+                        <label>Product Name</label>
+                        <input type="text" id="editProductName" placeholder="Enter product name" required>
+                    </div>
+                    <div class="form-group-new">
+                        <label>Category</label>
+                        <select id="editProductCategory" required>
+                            <option value="">Select Category</option>
+                            <option value="phone-case">Phone Case</option>
+                            <option value="charger">Charger</option>
+                            <option value="cable">Cable</option>
+                            <option value="screen-protector">Screen Protector</option>
+                            <option value="power-bank">Power Bank</option>
+                            <option value="other">Other Electronics</option>
+                        </select>
+                    </div>
+                    <div class="form-group-new">
+                        <label>SKU</label>
+                        <input type="text" id="editProductSku" readonly>
+                    </div>
+                    <div class="form-group-new">
+                        <label>Price</label>
+                        <input type="number" id="editProductPrice" step="0.01" placeholder="Enter price" required>
+                    </div>
+                    <div class="form-group-new">
+                        <label>Quantity in Stock</label>
+                        <input type="number" id="editProductQuantity" placeholder="Enter quantity" required>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn-form-submit">Save Changes</button>
+                        <button type="button" class="btn-form-cancel" onclick="hideEditProductForm()">Cancel</button>
                     </div>
                 </form>
             </div>
@@ -344,11 +391,56 @@
         }
         
         function editProduct(productId) {
-            alert('Edit functionality coming soon!');
+            const product = allProducts.find(p => p.id === productId);
+            if (!product) {
+                alert('Product not found.');
+                return;
+            }
+
+            document.getElementById('editProductId').value = product.id;
+            document.getElementById('editProductName').value = product.name;
+            document.getElementById('editProductCategory').value = product.category;
+            document.getElementById('editProductSku').value = product.sku;
+            document.getElementById('editProductPrice').value = product.price;
+            document.getElementById('editProductQuantity').value = product.quantity;
+            document.getElementById('editProductModal').classList.remove('hidden');
+        }
+
+        function hideEditProductForm() {
+            document.getElementById('editProductModal').classList.add('hidden');
+            document.getElementById('editProductId').value = '';
+        }
+
+        function updateProduct(event) {
+            event.preventDefault();
+
+            const productId = document.getElementById('editProductId').value;
+            const data = {
+                name: document.getElementById('editProductName').value,
+                category: document.getElementById('editProductCategory').value,
+                price: document.getElementById('editProductPrice').value,
+                quantity: document.getElementById('editProductQuantity').value
+            };
+
+            fetch('/api/products/' + productId, {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Product updated successfully!');
+                    location.reload();
+                } else {
+                    alert('Error: ' + (data.error || 'Unable to update product.'));
+                }
+            });
         }
         
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', loadProducts);
     </script>
+    <script src="{{ url_for('static', filename='js/ui.js') }}"></script>
 </body>
 </html>

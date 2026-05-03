@@ -356,6 +356,8 @@ body.dashboard-page {
     position: fixed;
     height: 100vh;
     overflow-y: auto;
+    transition: transform 0.3s ease;
+    z-index: 200;
 }
 
 .sidebar-brand {
@@ -416,6 +418,41 @@ body.dashboard-page {
     border-top: 1px solid rgba(255, 255, 255, 0.1);
     padding-top: 20px;
     margin-top: auto;
+}
+
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.45);
+    z-index: 150;
+}
+
+.sidebar-toggle {
+    display: none;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: white;
+    width: 45px;
+    height: 45px;
+    border-radius: 12px;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    margin-right: 15px;
+    transition: background-color 0.25s ease;
+}
+
+.sidebar-toggle:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+body.sidebar-open .sidebar-overlay {
+    display: block;
+}
+
+body.sidebar-open .sidebar {
+    transform: translateX(0);
 }
 
 .menu-item.logout {
@@ -1427,6 +1464,25 @@ body.dashboard-page {
 }
 
 /* Responsive */
+@media (max-width: 992px) {
+    .sidebar {
+        transform: translateX(-100%);
+    }
+
+    .main-content {
+        margin-left: 0;
+    }
+
+    .top-bar {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .sidebar-toggle {
+        display: inline-flex;
+    }
+}
+
 @media (max-width: 768px) {
     .pos-container {
         grid-template-columns: 1fr;
@@ -1900,7 +1956,11 @@ body.dashboard-page {
 }
 
 /* MODAL STYLES */
-.modal {
+.hidden {
+        display: none !important;
+    }
+
+    .modal {
     display: none;
     position: fixed;
     z-index: 1000;

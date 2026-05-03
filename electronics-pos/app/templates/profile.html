@@ -48,6 +48,9 @@
     <div class="main-content">
         <!-- Top Bar -->
         <div class="top-bar">
+            <button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Toggle sidebar">
+                <i class="fas fa-bars"></i>
+            </button>
             <div class="greeting">
                 <h2>Profile</h2>
             </div>
@@ -136,15 +139,130 @@
                 </div>
                 
                 <div class="profile-actions">
-                    <button class="btn btn-primary">
+                    <button class="btn btn-primary" onclick="showEditProfileForm()">
                         <i class="fas fa-edit"></i> Edit Profile
                     </button>
-                    <button class="btn btn-secondary">
+                    <button class="btn btn-secondary" onclick="showChangePasswordForm()">
                         <i class="fas fa-key"></i> Change Password
                     </button>
                 </div>
             </div>
         </div>
     </div>
+
+    <div id="editProfileModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Profile</h3>
+                <button class="close-modal" onclick="hideEditProfileForm()">×</button>
+            </div>
+            <form id="editProfileForm" onsubmit="submitProfileUpdate(event)">
+                <div class="form-group-new">
+                    <label>Username</label>
+                    <input type="text" id="editUsername" value="{{ user.username }}" required>
+                </div>
+                <div class="form-group-new">
+                    <label>Email</label>
+                    <input type="email" id="editEmail" value="{{ user.email }}" required>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn-form-submit">Save</button>
+                    <button type="button" class="btn-form-cancel" onclick="hideEditProfileForm()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="changePasswordModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Change Password</h3>
+                <button class="close-modal" onclick="hideChangePasswordForm()">×</button>
+            </div>
+            <form id="changePasswordForm" onsubmit="submitPasswordUpdate(event)">
+                <div class="form-group-new">
+                    <label>Current Password</label>
+                    <input type="password" id="currentPassword" required>
+                </div>
+                <div class="form-group-new">
+                    <label>New Password</label>
+                    <input type="password" id="newPassword" required>
+                </div>
+                <div class="form-group-new">
+                    <label>Confirm New Password</label>
+                    <input type="password" id="confirmPassword" required>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn-form-submit">Update Password</button>
+                    <button type="button" class="btn-form-cancel" onclick="hideChangePasswordForm()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function showEditProfileForm() {
+            document.getElementById('editProfileModal').classList.remove('hidden');
+        }
+
+        function hideEditProfileForm() {
+            document.getElementById('editProfileModal').classList.add('hidden');
+        }
+
+        function showChangePasswordForm() {
+            document.getElementById('changePasswordModal').classList.remove('hidden');
+        }
+
+        function hideChangePasswordForm() {
+            document.getElementById('changePasswordModal').classList.add('hidden');
+        }
+
+        function submitProfileUpdate(event) {
+            event.preventDefault();
+
+            const formData = new FormData();
+            formData.append('username', document.getElementById('editUsername').value);
+            formData.append('email', document.getElementById('editEmail').value);
+
+            fetch('/profile/update', {
+                method: 'POST',
+                body: formData
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Profile updated successfully.');
+                    location.reload();
+                } else {
+                    alert('Error: ' + (data.error || 'Unable to update profile.'));
+                }
+            });
+        }
+
+        function submitPasswordUpdate(event) {
+            event.preventDefault();
+
+            const formData = new FormData();
+            formData.append('currentPassword', document.getElementById('currentPassword').value);
+            formData.append('newPassword', document.getElementById('newPassword').value);
+            formData.append('confirmPassword', document.getElementById('confirmPassword').value);
+
+            fetch('/profile/change-password', {
+                method: 'POST',
+                body: formData
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Password changed successfully.');
+                    hideChangePasswordForm();
+                    document.getElementById('changePasswordForm').reset();
+                } else {
+                    alert('Error: ' + (data.error || 'Unable to change password.'));
+                }
+            });
+        }
+    </script>
+    <script src="{{ url_for('static', filename='js/ui.js') }}"></script>
 </body>
 </html>

@@ -50,6 +50,9 @@
     <div class="main-content">
         <!-- Top Bar -->
         <div class="top-bar">
+            <button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Toggle sidebar">
+                <i class="fas fa-bars"></i>
+            </button>
             <div class="greeting">
                 <h2>Sales Reports & Inventory Status</h2>
             </div>
@@ -169,5 +172,6 @@
             </table>
         </div>
     </div>
+    <script src="{{ url_for('static', filename='js/ui.js') }}"></script>
 </body>
 </html>
