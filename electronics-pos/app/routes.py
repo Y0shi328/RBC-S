@@ -401,3 +401,20 @@ def users():
     
     all_users = User.query.all()
     return render_template('users.html', users=all_users)
+
+@bp.route('/api/users/<int:user_id>', methods=['DELETE'])
+@login_required
+def delete_user(user_id):
+    if current_user.role != 'admin':
+        return jsonify({'error': 'Unauthorized'}), 403
+
+    if current_user.id == user_id:
+        return jsonify({'error': 'You cannot delete your own account.'}), 400
+
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({'error': 'User not found.'}), 404
+
+    db.session.delete(user)
+    db.session.commit()
+    return jsonify({'success': True})
