@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Export Inventory - NENE CELLSHOP</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container" style="margin: 20px auto; max-width: 1100px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+            <div>
+                <h1>Inventory Export</h1>
+                <p>All inventory items as of {{ "now" }}</p>
+            </div>
+            <button onclick="window.print()" class="btn btn-secondary btn-export">Export as PDF</button>
+        </div>
+        <div style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 12px rgba(0,0,0,0.05);">
+            <table class="recent-items-table" style="width: 100%;">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Product Name</th>
+                        <th>Category</th>
+                        <th>SKU</th>
+                        <th>Price</th>
+                        <th>Quantity</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in products %}
+                        <tr>
+                            <td>{{ product.id }}</td>
+                            <td>{{ product.name }}</td>
+                            <td>{{ product.category }}</td>
+                            <td>{{ product.sku }}</td>
+                            <td>₱{{ "%.2f"|format(product.price) }}</td>
+                            <td>{{ product.quantity_in_stock }}</td>
+                            <td>{{ product.get_status_display() }}</td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="7" style="text-align: center; padding: 20px;">No products found</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

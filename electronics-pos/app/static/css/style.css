@@ -1093,13 +1093,60 @@ body.sidebar-open .sidebar {
     font-size: 14px;
 }
 
-.summary-row.total {
+..summary-row.total {
     font-size: 18px;
     font-weight: bold;
     color: var(--primary-color);
     border-top: 1px solid #ddd;
     padding-top: 10px;
     margin-bottom: 15px;
+}
+
+.note-section {
+    margin-bottom: 20px;
+}
+
+.note-section label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #2d3748;
+}
+
+.note-section textarea {
+    width: 100%;
+    resize: vertical;
+    min-height: 100px;
+    padding: 12px;
+    border: 1px solid #cbd5e0;
+    border-radius: 8px;
+    font-size: 14px;
+    background: #f7fafc;
+    color: #2d3748;
+}
+
+.note-section textarea:focus {
+    outline: none;
+    border-color: #1a7f8f;
+    box-shadow: 0 0 0 3px rgba(26, 127, 143, 0.1);
+}
+
+.btn-sm {
+    padding: 6px 12px;
+    font-size: 12px;
+    border-radius: 6px;
+}
+
+.btn-export {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.actions-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
 /* Form Container */

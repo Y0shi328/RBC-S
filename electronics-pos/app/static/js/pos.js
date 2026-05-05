@@ -107,9 +107,13 @@ function updateCart() {
         });
     }
     
+    const vatAmount = totalAmount * 0.12;
+    const grandTotal = totalAmount + vatAmount;
+
     itemsCount.textContent = totalItems;
     subtotal.textContent = '₱' + totalAmount.toFixed(2);
-    total.textContent = '₱' + totalAmount.toFixed(2);
+    document.getElementById('vatAmount').textContent = '₱' + vatAmount.toFixed(2);
+    total.textContent = '₱' + grandTotal.toFixed(2);
 }
 
 // Change item quantity
@@ -131,6 +135,10 @@ function removeFromCart(index) {
 function clearCart() {
     if (confirm('Are you sure you want to clear the cart?')) {
         cart = [];
+        const noteField = document.getElementById('staffNote');
+        if (noteField) {
+            noteField.value = '';
+        }
         updateCart();
     }
 }
@@ -143,19 +151,25 @@ function checkout() {
     }
     
     const checkoutBtn = document.getElementById('checkoutBtn');
+    const staffNote = document.getElementById('staffNote') ? document.getElementById('staffNote').value.trim() : '';
+
     checkoutBtn.disabled = true;
     checkoutBtn.textContent = 'Processing...';
     
     fetch('/api/checkout', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ items: cart })
+        body: JSON.stringify({ items: cart, note: staffNote })
     })
     .then(r => r.json())
     .then(data => {
         if (data.success) {
-            alert(`Sale completed!\nSale ID: ${data.sale_id}\nTotal: ₱${data.total_amount.toFixed(2)}`);
+            alert(`Sale completed!\nSale ID: ${data.sale_id}\nSubtotal: ₱${data.subtotal.toFixed(2)}\nVAT: ₱${data.vat_amount.toFixed(2)}\nTotal: ₱${data.total_amount.toFixed(2)}`);
             cart = [];
+            const noteField = document.getElementById('staffNote');
+            if (noteField) {
+                noteField.value = '';
+            }
             updateCart();
             loadProducts(); // Reload products to update stock
         } else {

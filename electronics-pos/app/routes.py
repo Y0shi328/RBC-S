@@ -47,10 +47,13 @@ def dashboard():
             else:
                 in_stock += 1
 
+        total_products = len(products)
+
         return render_template('admin_dashboard.html', 
             total_sales=total_sales,
             total_transactions=total_transactions,
             top_products=top_products,
+            total_products=total_products,
 
             # inventory stats
             total_inventory=total_inventory,
@@ -114,7 +117,7 @@ def checkout():
     try:
         total_amount = 0
         total_items = 0
-        sale = Sale(employee_id=current_user.id, items_count=0, total_amount=0)
+        sale = Sale(employee_id=current_user.id, items_count=0, total_amount=0, vat_amount=0.0, staff_note='')
         
         for item in items:
             product = Product.query.get(item['product_id'])
@@ -138,8 +141,11 @@ def checkout():
             
             sale.items.append(sale_item)
         
-        sale.total_amount = total_amount
+        vat_amount = round(total_amount * 0.12, 2)
+        sale.vat_amount = vat_amount
+        sale.total_amount = round(total_amount + vat_amount, 2)
         sale.items_count = total_items
+        sale.staff_note = data.get('note', '').strip()
         
         db.session.add(sale)
         db.session.commit()
@@ -147,7 +153,9 @@ def checkout():
         return jsonify({
             'success': True,
             'sale_id': sale.id,
-            'total_amount': total_amount,
+            'subtotal': total_amount,
+            'vat_amount': vat_amount,
+            'total_amount': sale.total_amount,
             'items_count': total_items
         })
     
@@ -245,6 +253,9 @@ def reports():
             func.date(Sale.created_at).label('date'),
             func.sum(Sale.total_amount).label('total')
         ).filter(Sale.created_at >= thirty_days_ago).group_by(func.date(Sale.created_at)).all()
+
+        transactions = Sale.query.order_by(Sale.created_at.desc()).limit(20).all()
+
         #  INVENTORY STATS (FIXED LOCATION)
         products = Product.query.all()
 
@@ -273,6 +284,7 @@ def reports():
                              low_stock=low_stock,
                              critical_stock=critical_stock,
                              out_of_stock=out_of_stock,
+                             transactions=transactions,
                              user_role='admin')
     else:
         # Employee sees their own reports
@@ -345,6 +357,92 @@ def get_products():
         'price': p.price,
         'quantity': p.quantity_in_stock
     } for p in products])
+
+# Export inventory as printable PDF-like page
+@bp.route('/export/inventory')
+@login_required
+def export_inventory():
+    if current_user.role != 'admin':
+        flash('Unauthorized access', 'error')
+        return redirect(url_for('routes.dashboard'))
+
+    products = Product.query.order_by(Product.name).all()
+    return render_template('export_inventory.html', products=products)
+
+# Export reports as printable PDF-like page
+@bp.route('/export/reports')
+@login_required
+def export_reports():
+    if current_user.role == 'admin':
+        best_sellers = db.session.query(
+            Product.name,
+            Product.category,
+            func.sum(SaleItem.quantity).label('total_qty'),
+            func.sum(SaleItem.subtotal).label('total_sales')
+        ).join(SaleItem).group_by(Product.id).order_by(func.sum(SaleItem.quantity).desc()).all()
+
+        today = datetime.utcnow().date()
+        daily_total = db.session.query(func.sum(Sale.total_amount)).filter(func.date(Sale.created_at) == today).scalar() or 0
+
+        thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+        monthly_sales = db.session.query(
+            func.date(Sale.created_at).label('date'),
+            func.sum(Sale.total_amount).label('total')
+        ).filter(Sale.created_at >= thirty_days_ago).group_by(func.date(Sale.created_at)).all()
+
+        return render_template('export_reports.html',
+            best_sellers=best_sellers,
+            daily_total=daily_total,
+            monthly_sales=monthly_sales,
+            user_role='admin'
+        )
+    else:
+        best_sellers = db.session.query(
+            Product.name,
+            Product.category,
+            func.sum(SaleItem.quantity).label('total_qty'),
+            func.sum(SaleItem.subtotal).label('total_sales')
+        ).join(SaleItem).join(Sale).filter(Sale.employee_id == current_user.id).group_by(Product.id).order_by(func.sum(SaleItem.quantity).desc()).all()
+
+        today = datetime.utcnow().date()
+        daily_total = db.session.query(func.sum(Sale.total_amount)).filter(
+            Sale.employee_id == current_user.id,
+            func.date(Sale.created_at) == today
+        ).scalar() or 0
+
+        thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+        monthly_sales = db.session.query(
+            func.date(Sale.created_at).label('date'),
+            func.sum(Sale.total_amount).label('total')
+        ).filter(
+            Sale.employee_id == current_user.id,
+            Sale.created_at >= thirty_days_ago
+        ).group_by(func.date(Sale.created_at)).all()
+
+        return render_template('export_reports.html',
+            best_sellers=best_sellers,
+            daily_total=daily_total,
+            monthly_sales=monthly_sales,
+            user_role='employee'
+        )
+
+# Get sale note and details for admin
+@bp.route('/api/sale/<int:sale_id>')
+@login_required
+def get_sale_detail(sale_id):
+    if current_user.role != 'admin':
+        return jsonify({'error': 'Unauthorized'}), 403
+
+    sale = Sale.query.get_or_404(sale_id)
+    return jsonify({
+        'id': sale.id,
+        'employee': sale.employee.username if sale.employee else 'Unknown',
+        'created_at': sale.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+        'subtotal': round(sale.total_amount - sale.vat_amount, 2),
+        'vat_amount': round(sale.vat_amount, 2),
+        'total_amount': round(sale.total_amount, 2),
+        'staff_note': sale.staff_note or ''
+    })
 
 # Get sales data for charts
 @bp.route('/api/sales-data')

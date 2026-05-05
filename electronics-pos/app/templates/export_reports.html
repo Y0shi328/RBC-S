@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Export Reports - NENE CELLSHOP</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container" style="margin: 20px auto; max-width: 1100px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+            <div>
+                <h1>Reports Export</h1>
+                <p>{{ 'Admin' if user_role == 'admin' else 'Employee' }} report export</p>
+            </div>
+            <button onclick="window.print()" class="btn btn-secondary btn-export">Export as PDF</button>
+        </div>
+
+        <div style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 12px rgba(0,0,0,0.05); margin-bottom: 25px;">
+            <h2 style="margin-bottom: 15px;">Daily Sales Summary</h2>
+            <p style="font-size: 18px; font-weight: 600;">Total Sales Today: ₱{{ "%.2f"|format(daily_total) }}</p>
+        </div>
+
+        {% if best_sellers %}
+        <div style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 12px rgba(0,0,0,0.05); margin-bottom: 25px;">
+            <h2 style="margin-bottom: 15px;">Best Selling Products</h2>
+            <table class="recent-items-table" style="width: 100%;">
+                <thead>
+                    <tr>
+                        <th>Product Name</th>
+                        <th>Category</th>
+                        <th>Quantity Sold</th>
+                        <th>Total Revenue</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in best_sellers %}
+                    <tr>
+                        <td>{{ product[0] }}</td>
+                        <td>{{ product[1] }}</td>
+                        <td>{{ product[2] }}</td>
+                        <td>₱{{ "%.2f"|format(product[3]) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+        <div style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 12px rgba(0,0,0,0.05);">
+            <h2 style="margin-bottom: 15px;">Monthly Sales Trend</h2>
+            <table class="recent-items-table" style="width: 100%;">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Daily Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for date, total in monthly_sales %}
+                    <tr>
+                        <td>{{ date }}</td>
+                        <td>₱{{ "%.2f"|format(total) }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="2" style="text-align: center; padding: 20px;">No data available</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

@@ -109,9 +109,14 @@
                 <i class="fas fa-search"></i>
                 <input type="text" id="searchInput" placeholder="Search products..." onkeyup="searchProducts()">
             </div>
-            <button class="btn-add-product" onclick="showAddProductForm()">
-                <i class="fas fa-plus"></i> Add New Product
-            </button>
+            <div class="actions-group">
+                <a href="{{ url_for('routes.export_inventory') }}" class="btn btn-secondary btn-export">
+                    <i class="fas fa-file-pdf"></i> Export Inventory PDF
+                </a>
+                <button class="btn-add-product" onclick="showAddProductForm()">
+                    <i class="fas fa-plus"></i> Add New Product
+                </button>
+            </div>
         </div>
         
         <!-- Products Table -->

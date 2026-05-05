@@ -59,6 +59,8 @@ class Sale(db.Model):
     employee_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     total_amount = db.Column(db.Float, nullable=False)
     items_count = db.Column(db.Integer, nullable=False)
+    vat_amount = db.Column(db.Float, nullable=False, default=0.0)
+    staff_note = db.Column(db.Text, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     employee = db.relationship('User', backref='sales')

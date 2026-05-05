@@ -69,6 +69,12 @@
             </div>
         </div>
         
+        <div class="page-actions" style="margin-bottom: 20px; display: flex; justify-content: flex-end; gap: 12px;">
+            <a href="{{ url_for('routes.export_reports') }}" class="btn btn-secondary btn-export">
+                <i class="fas fa-file-pdf"></i> Export Report PDF
+            </a>
+        </div>
+        
         <!-- Inventory Status Cards -->
         <div class="stats-container">
             <div class="stat-card in-stock">
@@ -176,7 +182,77 @@
                 </tbody>
             </table>
         </div>
+
+        {% if user_role == 'admin' and transactions %}
+        <div class="recent-items-section">
+            <h3><i class="fas fa-receipt"></i> Recent Transactions</h3>
+            <table class="recent-items-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Date</th>
+                        <th>Employee</th>
+                        <th>Total</th>
+                        <th>Note</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sale in transactions %}
+                        <tr>
+                            <td>{{ sale.id }}</td>
+                            <td>{{ sale.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td>{{ sale.employee.username if sale.employee else 'Unknown' }}</td>
+                            <td>₱{{ '%.2f'|format(sale.total_amount) }}</td>
+                            <td>
+                                <button class="btn btn-secondary btn-sm" onclick="viewNote({{ sale.id }})">
+                                    View Note
+                                </button>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
     </div>
+
+    <div id="noteModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="noteModalTitle">Transaction Note</h3>
+                <button class="close-modal" onclick="hideNoteModal()">×</button>
+            </div>
+            <div class="modal-body" id="noteModalBody" style="font-size: 14px; line-height: 1.6; color: #2d3748; min-height: 100px;"></div>
+            <div class="form-actions">
+                <button type="button" class="btn-form-cancel" onclick="hideNoteModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function viewNote(saleId) {
+            fetch(`/api/sale/${saleId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        alert(data.error);
+                        return;
+                    }
+                    const noteText = data.staff_note || 'No internal note saved for this transaction.';
+                    document.getElementById('noteModalTitle').textContent = `Transaction #${data.id} Note`;
+                    document.getElementById('noteModalBody').textContent = noteText;
+                    document.getElementById('noteModal').classList.remove('hidden');
+                })
+                .catch(err => {
+                    console.error(err);
+                    alert('Unable to load transaction note.');
+                });
+        }
+
+        function hideNoteModal() {
+            document.getElementById('noteModal').classList.add('hidden');
+        }
+    </script>
     <script src="{{ url_for('static', filename='js/ui.js') }}"></script>
 </body>
 </html>
