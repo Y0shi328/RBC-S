@@ -188,16 +188,29 @@ body.dashboard-page {
 
 .input-wrapper i {
     position: absolute;
-    left: 16px;
-    color: #cbd5e0;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #718096;
     font-size: 16px;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
+    z-index: 2;
+    pointer-events: none;
 }
 
 .input-wrapper input {
     width: 100%;
-    padding: 14px 16px 14px 48px;
+    padding: 14px 16px 14px 60px;
     border: 1px solid #cbd5e0;
-    border-radius: 8px;
+    border-radius: 12px;
     font-size: 14px;
     transition: all 0.3s;
     background: #f7fafc;
@@ -208,6 +221,10 @@ body.dashboard-page {
     background: white;
     border-color: #1a7f8f;
     box-shadow: 0 0 0 3px rgba(26, 127, 143, 0.1);
+}
+
+.input-wrapper input::placeholder {
+    color: #a0aec0;
 }
 
 .form-options {
