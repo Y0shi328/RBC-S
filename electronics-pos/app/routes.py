@@ -346,6 +346,81 @@ def get_products():
         'quantity': p.quantity_in_stock
     } for p in products])
 
+# Get sales data for charts
+@bp.route('/api/sales-data')
+@login_required
+def get_sales_data():
+    if current_user.role != 'admin':
+        return jsonify({'error': 'Unauthorized'}), 403
+    
+    period = request.args.get('period', 'week')
+    
+    if period == 'week':
+        # Last 7 days
+        start_date = datetime.utcnow() - timedelta(days=6)
+        date_format = '%a'  # Day of week
+    elif period == 'month':
+        # Last 30 days
+        start_date = datetime.utcnow() - timedelta(days=29)
+        date_format = '%d'  # Day of month
+    else:  # year
+        # Last 12 months
+        start_date = datetime.utcnow() - timedelta(days=365)
+        date_format = '%b'  # Month name
+    
+    # Query sales data
+    sales_data = db.session.query(
+        func.date(Sale.created_at).label('date'),
+        func.sum(Sale.total_amount).label('total_sales'),
+        func.sum(Sale.items_count).label('items_sold')
+    ).filter(
+        Sale.created_at >= start_date
+    ).group_by(func.date(Sale.created_at)).order_by('date').all()
+    
+    # Format data for chart
+    labels = []
+    sales = []
+    items = []
+    
+    if not sales_data:
+        # Return empty data if no sales
+        if period == 'week':
+            for i in range(7):
+                date = datetime.utcnow() - timedelta(days=6-i)
+                labels.append(date.strftime('%a'))
+                sales.append(0)
+                items.append(0)
+        elif period == 'month':
+            for i in range(30):
+                date = datetime.utcnow() - timedelta(days=29-i)
+                labels.append(f"{date.day:02d}")
+                sales.append(0)
+                items.append(0)
+        else:
+            for i in range(12):
+                date = datetime.utcnow() - timedelta(days=365-i*30)
+                labels.append(date.strftime('%b'))
+                sales.append(0)
+                items.append(0)
+    else:
+        for record in sales_data:
+            if period == 'week':
+                label = record[0].strftime('%a')
+            elif period == 'month':
+                label = f"{record[0].day:02d}"
+            else:
+                label = record[0].strftime('%b %y')
+            
+            labels.append(label)
+            sales.append(float(record[1]) if record[1] else 0)
+            items.append(int(record[2]) if record[2] else 0)
+    
+    return jsonify({
+        'labels': labels,
+        'sales': sales,
+        'items': items
+    })
+
 # Profile Page
 @bp.route('/profile')
 @login_required

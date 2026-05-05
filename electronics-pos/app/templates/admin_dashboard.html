@@ -123,6 +123,21 @@
             </div>
         </div>
         
+        <!-- Sales Chart Section -->
+        <div class="sales-chart-section">
+            <div class="chart-header">
+                <h3><i class="fas fa-chart-line"></i> Sales Performance</h3>
+                <div class="chart-controls">
+                    <select id="chartPeriod" onchange="updateSalesChart()">
+                        <option value="week">Last 7 Days</option>
+                        <option value="month">Last 30 Days</option>
+                        <option value="year">Last 12 Months</option>
+                    </select>
+                </div>
+            </div>
+            <canvas id="salesChart"></canvas>
+        </div>
+        
         <!-- Recent Items Table -->
         <div class="recent-items-section">
             <h3>Recent Items</h3>
@@ -157,19 +172,143 @@
         </div>
     </div>
     
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <script>
-        // Calculate total inventory on page load
-       /* document.addEventListener('DOMContentLoaded', function() {
-            fetch('/api/products')
+        let salesChart = null;
+        
+        // Initialize chart on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            updateSalesChart();
+        });
+        
+        // Update sales chart based on selected period
+        function updateSalesChart() {
+            const period = document.getElementById('chartPeriod').value;
+            
+            fetch(`/api/sales-data?period=${period}`)
                 .then(response => response.json())
-                .then(products => {
-                    let totalInventory = 0;
-                    products.forEach(product => {
-                        totalInventory += product.quantity;
-                    });
-                    document.getElementById('total-inventory').textContent = totalInventory;
-                });
-        });*/
+                .then(data => {
+                    renderChart(data);
+                })
+                .catch(error => console.error('Error fetching sales data:', error));
+        }
+        
+        // Render chart with data
+        function renderChart(data) {
+            const ctx = document.getElementById('salesChart').getContext('2d');
+            
+            // Destroy existing chart if it exists
+            if (salesChart) {
+                salesChart.destroy();
+            }
+            
+            salesChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [
+                        {
+                            label: 'Sales Amount (₱)',
+                            data: data.sales,
+                            borderColor: '#1a7f8f',
+                            backgroundColor: 'rgba(26, 127, 143, 0.05)',
+                            borderWidth: 2.5,
+                            fill: true,
+                            tension: 0.4,
+                            pointRadius: 4,
+                            pointBackgroundColor: '#1a7f8f',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                            pointHoverRadius: 6
+                        },
+                        {
+                            label: 'Items Sold',
+                            data: data.items,
+                            borderColor: '#ed8936',
+                            backgroundColor: 'rgba(237, 137, 54, 0.05)',
+                            borderWidth: 2.5,
+                            fill: true,
+                            tension: 0.4,
+                            pointRadius: 4,
+                            pointBackgroundColor: '#ed8936',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                            pointHoverRadius: 6,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                font: {
+                                    size: 13,
+                                    weight: '600'
+                                },
+                                padding: 15,
+                                usePointStyle: true,
+                                pointStyle: 'circle'
+                            }
+                        },
+                        filler: {
+                            propagate: true
+                        }
+                    },
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            ticks: {
+                                callback: function(value) {
+                                    return '₱' + value.toLocaleString();
+                                },
+                                font: {
+                                    size: 12
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)',
+                                drawBorder: false
+                            }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            ticks: {
+                                font: {
+                                    size: 12
+                                }
+                            },
+                            grid: {
+                                drawOnChartArea: false
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)',
+                                drawBorder: false
+                            },
+                            ticks: {
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
     </script>
     <script src="{{ url_for('static', filename='js/ui.js') }}"></script>
 </body>
