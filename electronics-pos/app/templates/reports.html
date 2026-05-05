@@ -20,7 +20,12 @@
                 <i class="fas fa-chart-line"></i>
                 <span>DashBoard</span>
             </a>
-            {% if current_user.role == 'admin' %}
+            {% if current_user.role == 'employee' %}
+            <a href="{{ url_for('routes.pos') }}" class="menu-item">
+                <i class="fas fa-shopping-cart"></i>
+                <span>POS</span>
+            </a>
+            {% elif current_user.role == 'admin' %}
             <a href="{{ url_for('routes.products') }}" class="menu-item">
                 <i class="fas fa-box"></i>
                 <span>Inventory</span>
